@@ -11,8 +11,6 @@ const validateEnv = () => {
     LOG_LEVEL: str({ choices: ['error', 'warn', 'info', 'http', 'verbose', 'debug', 'silly'] }),
     JWT_ACCESS_SECRET: str(),
     JWT_REFRESH_SECRET: str(),
-    GOOGLE_CLIENT_ID: str(),
-    GOOGLE_CLIENT_SECRET: str(),
     SMTP_HOST: str(),
     SMTP_PORT: port(),
     SMTP_USER: str(),
