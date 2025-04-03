@@ -51,10 +51,6 @@ export default [
       'prefer-template': 'warn',
     },
   },
-  {
-    files: ['**/*.js'],
-    languageOptions: { sourceType: 'commonjs' },
-  },
   { languageOptions: { globals: globals.node } },
   eslint.configs.recommended,
 ];
