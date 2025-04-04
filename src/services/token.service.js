@@ -1,6 +1,9 @@
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
-import { UnauthorizedError } from '../utils/customErrors';
+import { UnauthorizedError } from '../utils/customErrors.js';
+import validateEnv from '../utils/validateEnv.js';
+
+validateEnv();
 
 // Schema for blacklisted tokens
 const BlacklistedTokenSchema = new mongoose.Schema({

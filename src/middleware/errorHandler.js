@@ -10,7 +10,7 @@ const errorHandler = (err, req, res, next) => {
     const field = Object.keys(err.keyValue)[0];
     error.statusCode = 400;
     error.status = 'fail';
-    error.message = `${field} already exists`;
+    error.message = `A record with this ${field} already exists`;
     error.isOperational = true;
   }
 
@@ -20,6 +20,22 @@ const errorHandler = (err, req, res, next) => {
     error.statusCode = 400;
     error.status = 'fail';
     error.message = `Validation Error: ${errors.join('. ')}`;
+    error.isOperational = true;
+  }
+
+  // Handle Cast Errors (malformed MongoDB IDs)
+  if (err.name === 'CastError') {
+    error.statusCode = 400;
+    error.status = 'fail';
+    error.message = `Invalid ${err.path}: ${err.value}`;
+    error.isOperational = true;
+  }
+  
+  // Handle Multer Errors
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    error.statusCode = 400;
+    error.status = 'fail';
+    error.message = 'File too large. Maximum size is 5MB.';
     error.isOperational = true;
   }
 

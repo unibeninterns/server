@@ -1,10 +1,11 @@
 import crypto from 'crypto';
-import User from '../models/user.model.js';
+import User from '../model/user.model.js';
 import tokenService from '../services/token.service.js';
 import emailService from '../services/email.service.js';
 import { BadRequestError, UnauthorizedError } from '../utils/customErrors.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import logger from '../utils/logger.js';
+import generateSecurePassword from '../utils/passwordGenerator.js';
 
 class AuthController {
   // Admin invite method for inviting researchers/lecturers
@@ -77,11 +78,15 @@ class AuthController {
       throw new BadRequestError('Invalid or expired invitation token');
     }
     
+    // Generate a random password for the user
+    const generatedPassword = generateSecurePassword();
+    
     // Update user profile
     user.name = name;
     user.faculty = faculty;
     user.title = title;
     user.profilePicture = profilePicture;
+    user.password = generatedPassword; // Will be hashed by pre-save hook
     user.isActive = true;
     user.inviteToken = undefined;
     user.inviteTokenExpires = undefined;
@@ -89,9 +94,13 @@ class AuthController {
     await user.save();
     logger.info(`Profile completed for user: ${user.email}`);
     
+    // Send login credentials to the researcher
+    await emailService.sendCredentialsEmail(user.email, generatedPassword);
+    logger.info(`Login credentials sent to: ${user.email}`);
+    
     res.status(200).json({
       success: true,
-      message: 'Profile completed successfully'
+      message: 'Profile completed successfully. Login credentials have been sent to your email.'
     });
   });
 
@@ -140,6 +149,63 @@ class AuthController {
         name: user.name,
         email: user.email,
         role: user.role
+      }
+    });
+  });
+
+  // Researcher login
+  researcherLogin = asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
+
+    logger.info(`Researcher login attempt for email: ${email}`);
+    
+    // Find user and check password
+    const user = await User.findOne({ email }).select('+password');
+    if (!user) {
+      logger.warn(`No account found for email: ${email}`);
+      throw new UnauthorizedError('No account found with this email address');
+    }
+    
+    if (user.role !== 'researcher') {
+      logger.warn(`Non-researcher user attempted researcher login: ${email}`);
+      throw new UnauthorizedError('Access denied: Researcher account required');
+    }
+    
+    if (!user.isActive) {
+      logger.warn(`Inactive user attempted login: ${email}`);
+      throw new UnauthorizedError('Your account is not active. Please complete your profile first.');
+    }
+    
+    const isPasswordCorrect = await user.comparePassword(password);
+    if (!isPasswordCorrect) {
+      logger.warn(`Incorrect password attempt for researcher: ${email}`);
+      throw new UnauthorizedError('Incorrect password');
+    }
+
+    const tokens = tokenService.generateTokens({
+      userId: String(user._id),
+      email: user.email,
+      role: user.role
+    });
+
+    user.refreshToken = tokens.refreshToken;
+    user.lastLogin = new Date();
+    await user.save();
+
+    tokenService.setRefreshTokenCookie(res, tokens.refreshToken);
+    logger.info(`Researcher login successful for: ${email}`);
+    
+    res.json({
+      success: true,
+      accessToken: tokens.accessToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        faculty: user.faculty,
+        title: user.title,
+        profilePicture: user.profilePicture
       }
     });
   });

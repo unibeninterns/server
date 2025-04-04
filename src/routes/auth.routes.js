@@ -3,15 +3,20 @@ import authController from '../controllers/auth.controller.js';
 import { authenticateAdminToken, rateLimiter } from '../middleware/auth.middleware.js';
 import multer from 'multer';
 import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
 const router = express.Router();
 
-const strictLimit = rateLimiter(5, 15 * 60 * 1000);
+const strictLimit = rateLimiter(5, 15 * 60 * 1000); // 5 requests per 15 minutes
+const standardLimit = rateLimiter(15, 15 * 60 * 1000); // 15 requests per 15 minutes
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
-    cb(null, 'uploads/profiles/');
+    cb(null, path.join(__dirname, '../uploads/profiles/'));
   },
   filename: function(req, file, cb) {
     cb(null, `${Date.now()}-${path.basename(file.originalname)}`);
@@ -34,6 +39,11 @@ const upload = multer({
 // Admin routes
 router.post('/admin/login', strictLimit, authController.adminLogin);
 router.post('/admin/invite', authenticateAdminToken, authController.inviteResearcher);
+
+// Researcher routes
+router.post('/researcher/login', standardLimit, authController.researcherLogin);
+
+// Common routes
 router.post('/refresh-token', authController.refreshToken);
 router.post('/logout', authController.logout);
 

@@ -53,6 +53,29 @@ class AppError extends Error {
       this.details = details;
     }
   }
+
+  class CastError extends AppError {
+    constructor(path, value) {
+      super(`Invalid ${path}: ${value}`, 400);
+      this.path = path;
+      this.value = value;
+    }
+  }
+  
+  class DuplicateKeyError extends AppError {
+    constructor(field, value) {
+      super(`A record with this ${field} already exists`, 409);
+      this.keyValue = { [field]: value };
+      this.code = 11000;
+    }
+  }
+  
+  class FileUploadError extends AppError {
+    constructor(message = 'File too large. Maximum size is 5MB.') {
+      super(message, 400);
+      this.code = 'LIMIT_FILE_SIZE';
+    }
+  }
     
   export { 
     AppError, 
@@ -62,5 +85,8 @@ class AppError extends Error {
     RateLimitError, 
     ExternalServiceAPIError, 
     ForbiddenError, 
-    ValidationError 
+    ValidationError,
+    CastError,
+    DuplicateKeyError,
+    FileUploadError
   };

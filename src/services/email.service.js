@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import { BadRequestError } from '../utils/customErrors';
+import { BadRequestError } from '../utils/customErrors.js';
 
 class EmailService {
   constructor() {
@@ -39,6 +39,29 @@ class EmailService {
       });
     } catch (error) {
       throw new BadRequestError('Failed to send invitation email');
+    }
+  }
+
+  async sendCredentialsEmail(email, password) {
+    const loginUrl = `${this.frontendUrl}/researcher-login`;
+
+    try {
+      await this.transporter.sendMail({
+        from: this.emailFrom,
+        to: email,
+        subject: 'Your Research Portal Account Credentials',
+        html: `
+          <h1>Research Portal Account Created</h1>
+          <p>Your account has been created successfully. Please use the following credentials to log in:</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Password:</strong> ${password}</p>
+          <p>Please click the link below to log in to your account:</p>
+          <a href="${loginUrl}">${loginUrl}</a>
+          <p>If you didn't request this account, please contact our support team.</p>
+        `
+      });
+    } catch (error) {
+      throw new BadRequestError('Failed to send credentials email');
     }
   }
 

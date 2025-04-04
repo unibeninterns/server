@@ -2,6 +2,19 @@ import app from './app.js';
 import connectDB from './db/database.js';
 import logger from './utils/logger.js';
 import validateEnv from './utils/validateEnv.js';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const uploadDir = path.join(__dirname, 'uploads', 'profiles');
+
+// Create directory if it doesn't exist
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+  logger.info(`Upload directory created: ${uploadDir}`);
+}
 
 validateEnv();
 
