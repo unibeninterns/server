@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: DRID research management API
+  title: DRID Research Portal API
   description: |
     A research management API for DRID
     Authentication is handled via JWT access tokens and HTTP-only cookie refresh tokens.
@@ -21,7 +21,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-
+    
   schemas:
     User:
       type: object
@@ -34,7 +34,16 @@ components:
         email:
           type: string
           format: email
-        isEmailVerified:
+        role:
+          type: string
+          enum: [admin, researcher]
+        faculty:
+          type: string
+        title:
+          type: string
+        profilePicture:
+          type: string
+        isActive:
           type: boolean
         lastLogin:
           type: string
@@ -42,11 +51,8 @@ components:
         createdAt:
           type: string
           format: date-time
-        updatedAt:
-          type: string
-          format: date-time
 
-    AuthResponse:
+    AdminAuthResponse:
       type: object
       properties:
         success:
@@ -62,6 +68,33 @@ components:
               type: string
             email:
               type: string
+            role:
+              type: string
+
+    ResearcherAuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        accessToken:
+          type: string
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            email:
+              type: string
+            role:
+              type: string
+            faculty:
+              type: string
+            title:
+              type: string
+            profilePicture:
+              type: string
 
     ErrorResponse:
       type: object
@@ -74,29 +107,12 @@ components:
           type: string
 
 paths:
-  /auth/register:
-    post:
-      summary: Register a new user account
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [name, email, password]
-              properties:
-                name:
-                  type: string
-                  maxLength: 50
-                email:
-                  type: string
-                  format: email
-                password:
-                  type: string
-                  minLength: 8
+  /:
+    get:
+      summary: API health check
       responses:
-        '201':
-          description: Registration successful
+        '200':
+          description: API is running
           content:
             application/json:
               schema:
@@ -106,16 +122,12 @@ paths:
                     type: boolean
                   message:
                     type: string
-        '400':
-          description: Invalid input or email already registered
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
 
-  /auth/login:
+  /auth/admin/login:
     post:
-      summary: User login
+      summary: Admin login
+      tags:
+        - Authentication
       requestBody:
         required: true
         content:
@@ -135,14 +147,40 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthResponse'
+                $ref: '#/components/schemas/AdminAuthResponse'
           headers:
             Set-Cookie:
               schema:
                 type: string
                 description: HTTP-only cookie containing refresh token
         '401':
-          description: Invalid credentials or email not verified
+          description: Invalid credentials or insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/admin/invite:
+    post:
+      summary: Invite a researcher (admin only)
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Invitation sent successfully
           content:
             application/json:
               schema:
@@ -150,16 +188,63 @@ paths:
                 properties:
                   success:
                     type: boolean
-                  code:
-                    type: string
                   message:
                     type: string
-                  canResend:
-                    type: boolean
+        '400':
+          description: Invalid request or email already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/researcher/login:
+    post:
+      summary: Researcher login
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResearcherAuthResponse'
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                description: HTTP-only cookie containing refresh token
+        '401':
+          description: Invalid credentials or inactive account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /auth/refresh-token:
     post:
       summary: Refresh access token using refresh token cookie
+      tags:
+        - Authentication
       responses:
         '200':
           description: New access token generated
@@ -187,8 +272,8 @@ paths:
   /auth/logout:
     post:
       summary: Logout user and invalidate tokens
-      security:
-        - BearerAuth: []
+      tags:
+        - Authentication
       responses:
         '200':
           description: Successfully logged out
@@ -207,45 +292,42 @@ paths:
                 type: string
                 description: Clears refresh token cookie
 
-  /auth/verify-email/{token}:
-    get:
-      summary: Verify user email
+  /auth/complete-profile/{token}:
+    post:
+      summary: Complete researcher profile after invitation
+      tags:
+        - Authentication
       parameters:
         - in: path
           name: token
           required: true
           schema:
             type: string
-      responses:
-        '200':
-          description: Email successfully verified
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-
-  /auth/resend-verification:
-    post:
-      summary: Resend email verification token
+          description: Invitation token sent to researcher's email
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
-              required: [email]
+              required: [name, faculty, title]
               properties:
-                email:
+                name:
                   type: string
-                  format: email
+                  description: Researcher's full name
+                faculty:
+                  type: string
+                  description: Faculty or department
+                title:
+                  type: string
+                  description: Academic or professional title
+                profilePicture:
+                  type: string
+                  format: binary
+                  description: Profile picture (JPEG, PNG, or JPG, max 5MB)
       responses:
         '200':
-          description: Verification email sent
+          description: Profile completed successfully
           content:
             application/json:
               schema:
@@ -256,81 +338,8 @@ paths:
                   message:
                     type: string
         '400':
-          description: Invalid request or rate limit exceeded
+          description: Invalid or expired token, or invalid input
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
-  /auth/forgot-password:
-    post:
-      summary: Initiate password reset
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [email]
-              properties:
-                email:
-                  type: string
-                  format: email
-      responses:
-        '200':
-          description: Password reset email sent
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-
-  /auth/reset-password/{token}:
-    post:
-      summary: Reset password using reset token
-      parameters:
-        - in: path
-          name: token
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [password]
-              properties:
-                password:
-                  type: string
-                  minLength: 8
-      responses:
-        '200':
-          description: Password successfully reset
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string               
- 
-  /user/me:
-    get:
-      summary: Get current user profile
-      security:
-        - BearerAuth: []
-      responses:
-        '200':
-          description: User profile retrieved
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
