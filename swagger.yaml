@@ -310,7 +310,7 @@ paths:
           multipart/form-data:
             schema:
               type: object
-              required: [name, faculty, title]
+              required: [name, faculty, bio, title]
               properties:
                 name:
                   type: string
@@ -321,6 +321,9 @@ paths:
                 title:
                   type: string
                   description: Academic or professional title
+                bio:
+                  type: string
+                  description: Interests and areas of expertise
                 profilePicture:
                   type: string
                   format: binary

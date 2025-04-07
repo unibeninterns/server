@@ -58,7 +58,7 @@ class AuthController {
   // Complete profile from invitation
   completeProfile = asyncHandler(async (req, res) => {
     const { token } = req.params;
-    const { name, faculty, title } = req.body;
+    const { name, faculty, bio, title } = req.body;
     const profilePicture = req.file ? req.file.path : null;
     
     logger.info(`Profile completion attempt with token: ${token.substring(0, 8)}...`);
@@ -84,9 +84,10 @@ class AuthController {
     // Update user profile
     user.name = name;
     user.faculty = faculty;
+    user.bio = bio;
     user.title = title;
     user.profilePicture = profilePicture;
-    user.password = generatedPassword; // Will be hashed by pre-save hook
+    user.password = generatedPassword;
     user.isActive = true;
     user.inviteToken = undefined;
     user.inviteTokenExpires = undefined;
