@@ -48,12 +48,15 @@ const UserSchema = new mongoose.Schema({
   },
   inviteToken: {
     type: String,
-    select: false
   },
   inviteTokenExpires: {
     type: Date,
-    select: false
   },
+  invitationStatus: {
+  type: String,
+  enum: ['pending', 'accepted', 'expired'],
+  default: 'pending'
+},
   lastLogin: {
     type: Date
   },

@@ -2,19 +2,20 @@ import mongoose from 'mongoose';
 import User from '../model/user.model.js';
 import connectDB from '../db/database.js';
 import validateEnv from '../utils/validateEnv.js';
+import logger from '../utils/logger.js';
 
 validateEnv();
 
 const createAdminUser = async () => {
   try {
     await connectDB();
-    console.log('Connected to database');
+    logger.info('Connected to database');
 
     // Check if admin already exists
     const adminExists = await User.findOne({ email: process.env.ADMIN_EMAIL });
-    
+
     if (adminExists) {
-      console.log('Admin user already exists');
+      logger.info('Admin user already exists');
       process.exit(0);
     }
 
@@ -24,13 +25,13 @@ const createAdminUser = async () => {
       email: process.env.ADMIN_EMAIL,
       password: process.env.ADMIN_PASSWORD,
       role: 'admin',
-      isActive: true
+      isActive: true,
     });
 
-    console.log(`Admin user created with email: ${admin.email}`);
+    logger.info(`Admin user created with email: ${admin.email}`);
     process.exit(0);
   } catch (error) {
-    console.error('Error creating admin user:', error);
+    logger.info('Error creating admin user:', error);
     process.exit(1);
   }
 };

@@ -21,7 +21,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-    
+
   schemas:
     User:
       type: object
@@ -160,49 +160,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /auth/admin/invite:
-    post:
-      summary: Invite a researcher (admin only)
-      tags:
-        - Authentication
-      security:
-        - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [email]
-              properties:
-                email:
-                  type: string
-                  format: email
-      responses:
-        '200':
-          description: Invitation sent successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-        '400':
-          description: Invalid request or email already registered
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - admin access required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
   /auth/researcher/login:
     post:
       summary: Researcher login
@@ -274,6 +231,8 @@ paths:
       summary: Logout user and invalidate tokens
       tags:
         - Authentication
+      security:
+        - BearerAuth: []
       responses:
         '200':
           description: Successfully logged out
@@ -342,6 +301,332 @@ paths:
                     type: string
         '400':
           description: Invalid or expired token, or invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/researchers/invite:
+    post:
+      summary: Invite a researcher (admin only)
+      tags:
+        - Administration
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Invitation sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Invalid request or email already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Add manually creating researcher profile
+  /admin/researchers/add:
+    post:
+      summary: Add a researcher profile manually (admin only)
+      tags:
+        - Administration
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [email, name, faculty, title]
+              properties:
+                email:
+                  type: string
+                  format: email
+                name:
+                  type: string
+                  description: Researcher's full name
+                faculty:
+                  type: string
+                  description: Faculty or department
+                title:
+                  type: string
+                  description: Academic or professional title
+                bio:
+                  type: string
+                  description: Interests and areas of expertise
+                profilePicture:
+                  type: string
+                  format: binary
+                  description: Profile picture (JPEG, PNG, or JPG, max 3MB)
+      responses:
+        '201':
+          description: Researcher profile created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      email:
+                        type: string
+                      name:
+                        type: string
+                      faculty:
+                        type: string
+                      title:
+                        type: string
+        '400':
+          description: Invalid request or email already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Get researchers list
+  /admin/researchers:
+    get:
+      summary: Get all active researchers (admin only)
+      tags:
+        - Administration
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of all active researchers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                        name:
+                          type: string
+                        email:
+                          type: string
+                        faculty:
+                          type: string
+                        title:
+                          type: string
+                        profilePicture:
+                          type: string
+                        createdAt:
+                          type: string
+                          format: date-time
+                        lastLogin:
+                          type: string
+                          format: date-time
+        '401':
+          description: Unauthorized - admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/researchers/{id}:
+    delete:
+      summary: Delete a researcher profile (admin only)
+      tags:
+        - Administration
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the researcher to delete
+      responses:
+        '200':
+          description: Researcher profile deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '404':
+          description: Researcher not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  # Get pending invitations
+  /admin/invitations:
+    get:
+      summary: Get all pending invitations (admin only)
+      tags:
+        - Administration
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of all pending invitations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        email:
+                          type: string
+                        status:
+                          type: string
+                          enum: [pending, expired]
+                        created:
+                          type: string
+                          format: date
+                        expires:
+                          type: string
+                          format: date
+        '401':
+          description: Unauthorized - admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Resend invitation
+  /admin/invitations/{id}/resend:
+    post:
+      summary: Resend an invitation (admin only)
+      tags:
+        - Administration
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the invitation to resend
+      responses:
+        '200':
+          description: Invitation resent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '404':
+          description: Invitation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Delete invitation
+  /admin/invitations/{id}:
+    delete:
+      summary: Delete an invitation (admin only)
+      tags:
+        - Administration
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the invitation to delete
+      responses:
+        '200':
+          description: Invitation deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '404':
+          description: Invitation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - admin access required
           content:
             application/json:
               schema:
