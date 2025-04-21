@@ -10,8 +10,18 @@ import compression from 'compression';
 import routes from './routes/index.js';
 import errorHandler from './middleware/errorHandler.js';
 import notFound from './middleware/notFound.js';
-import { corsOptions, helmetOptions, rateLimitOptions } from './utils/securityConfig.js';
+import {
+  corsOptions,
+  helmetOptions,
+  rateLimitOptions,
+} from './utils/securityConfig.js';
 import logger from './utils/logger.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const swaggerDocument = YAML.load('./swagger.yaml');
 
@@ -22,13 +32,14 @@ app.use(helmet(helmetOptions));
 app.use(cors(corsOptions));
 app.use(rateLimit(rateLimitOptions));
 app.use(cookieParser());
-app.use(morgan('combined', {
-  stream: {
-    write: (message) => {
-      logger.info(message.trim()); 
+app.use(
+  morgan('combined', {
+    stream: {
+      write: (message) => {
+        logger.info(message.trim());
+      },
     },
-  },
-})
+  })
 );
 
 app.use(express.json());
@@ -39,7 +50,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use('/api/v1', routes);

@@ -8,13 +8,22 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const uploadDir = path.join(__dirname, 'uploads', 'profiles');
+const uploadsDir = path.join(__dirname, 'uploads');
+const profileUploadDir = path.join(uploadsDir, 'profiles');
+const coverPicUploadDir = path.join(uploadsDir, 'cover_pic');
 
-// Create directory if it doesn't exist
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-  logger.info(`Upload directory created: ${uploadDir}`);
+// Create directories if they don't exist
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  logger.info(`Uploads directory created: ${uploadsDir}`);
 }
+
+[profileUploadDir, coverPicUploadDir].forEach((dir) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+    logger.info(`Directory created: ${dir}`);
+  }
+});
 
 validateEnv();
 
@@ -25,7 +34,9 @@ const startServer = async () => {
     await connectDB();
     const server = app.listen(PORT, () => {
       const { port } = server.address();
-      logger.info(`Server running in ${process.env.NODE_ENV} mode on port ${port}`);
+      logger.info(
+        `Server running in ${process.env.NODE_ENV} mode on port ${port}`
+      );
     });
   } catch (error) {
     logger.error('Failed to start server:', error);
