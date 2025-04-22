@@ -11,8 +11,8 @@ export const createAdminUser = async () => {
     await connectDB();
     logger.info('Connected to database');
 
-    if(!process.env.ADMIN_EMAIL || process.env.ADMIN_PASSWORD)
-      logger.error("Add admin info to the .env records.")
+    if(!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD)
+      return logger.error("Add admin info to the .env records.")
 
     // Check if admin already exists
     const adminExists = await User.findOne({ email: process.env.ADMIN_EMAIL });
