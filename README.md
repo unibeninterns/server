@@ -3,12 +3,12 @@
 ## Prerequisites
 1. Ensure you have [Node.js](https://nodejs.org/) installed.
 2. Install [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/).
-3. Set up a database (e.g., PostgreSQL, MySQL, etc.) if required.
+3. Set up a database MONGODB.
 
 ## Installation
 1. Clone the repository:
     ```bash
-    git clone https://github.com/your-repo/drid-backend-for-blog.git
+    git clone https://github.com/unibeninterns/server.git
     cd drid-backend-for-blog
     ```
 
@@ -81,3 +81,4 @@ This project is licensed under the ISC License.
 ## Authors
 - Raymond Omoyakhi ([raymondomoyakhi@gmail.com](mailto:raymondomoyakhi@gmail.com))
 - Udezue Oluomachi ([basilchimaobi2@gmail.com](mailto:basilchimaobi2@gmail.com))
+- Philip Omagbemi Esigbone ([@EsigboneO](https://x.com/@EsigboneO)) Contributed python code converted to Node

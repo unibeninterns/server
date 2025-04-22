@@ -6,6 +6,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { createAdminUser } from './scripts/createAdmin.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -37,6 +38,7 @@ const startServer = async () => {
       logger.info(
         `Server running in ${process.env.NODE_ENV} mode on port ${port}`
       );
+      createAdminUser();
     });
   } catch (error) {
     logger.error('Failed to start server:', error);
