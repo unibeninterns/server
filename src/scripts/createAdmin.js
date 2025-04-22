@@ -18,7 +18,7 @@ export const createAdminUser = async () => {
     const adminExists = await User.findOne({ email: process.env.ADMIN_EMAIL });
 
     if (adminExists) {
-      logger.info('Admin user already exists');
+      return logger.info('Admin user already exists');
       //process.exit(0);
     }
 
@@ -31,11 +31,9 @@ export const createAdminUser = async () => {
       isActive: true,
     });
 
-    logger.info(`Admin user created with email: ${admin.email}`);
-    //process.exit(0);
+    return logger.info(`Admin user created with email: ${admin.email}`);
   } catch (error) {
-    logger.info('Error creating admin user:', error);
-    process.exit(1);
+    return logger.info('Error creating admin user:', error);
   }
 };
 
