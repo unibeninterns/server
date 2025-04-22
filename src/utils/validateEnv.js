@@ -20,6 +20,7 @@ const validateEnv = () => {
     ADMIN_NAME: str(),
     ADMIN_EMAIL: email(),
     ADMIN_PASSWORD: str(),
+    API_URL: url(),
   });
 };
 
