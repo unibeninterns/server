@@ -19,7 +19,7 @@ export const createAdminUser = async () => {
 
     if (adminExists) {
       logger.info('Admin user already exists');
-      process.exit(0);
+      //process.exit(0);
     }
 
     // Create admin user
@@ -32,7 +32,7 @@ export const createAdminUser = async () => {
     });
 
     logger.info(`Admin user created with email: ${admin.email}`);
-    process.exit(0);
+    //process.exit(0);
   } catch (error) {
     logger.info('Error creating admin user:', error);
     process.exit(1);
