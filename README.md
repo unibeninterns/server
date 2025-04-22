@@ -9,7 +9,7 @@
 1. Clone the repository:
     ```bash
     git clone https://github.com/unibeninterns/server.git
-    cd drid-backend-for-blog
+    cd server
     ```
 
 2. Install dependencies:
