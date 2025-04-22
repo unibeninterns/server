@@ -40,6 +40,7 @@
         ADMIN_NAME=
         ADMIN_EMAIL=
         ADMIN_PASSWORD=
+        API_URL = #this is important. It is the url for the hosted server. E.g if the server is hosted at https://example.com, its value should be https://example.com
     ```
 
     Replace the placeholder values with your actual configuration.
