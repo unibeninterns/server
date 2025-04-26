@@ -13,7 +13,7 @@ class AuthController {
     const { token } = req.params;
     const { name, faculty, bio, title } = req.body;
     const profilePicture = req.file
-      ? `http://localhost:3000/uploads/profiles/${req.file.filename}`
+      ? `${process.env.API_URL || 'http://localhost:3000'}/uploads/profiles/${req.file.filename}`
       : null;
 
     logger.info(
