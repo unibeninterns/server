@@ -1,12 +1,15 @@
 import nodemailer from 'nodemailer';
 import logger from '../utils/logger.js';
 import { BadRequestError } from '../utils/customErrors.js';
+import validateEnv from '../utils/validateEnv.js';
+
+validateEnv();
 
 class EmailService {
   constructor() {
     this.transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587'),
+      port: parseInt(process.env.SMTP_PORT || '465'),
       secure: process.env.SMTP_SECURE === 'true',
       auth: {
         user: process.env.SMTP_USER,
