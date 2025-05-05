@@ -15,6 +15,9 @@ class EmailService {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      connectionTimeout: 10000, // 10 seconds
+      greetingTimeout: 5000, // 5 seconds
+      socketTimeout: 10000,
     });
 
     this.frontendUrl = process.env.FRONTEND_URL;
