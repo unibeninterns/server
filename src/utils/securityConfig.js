@@ -34,13 +34,13 @@ export const helmetOptions = {
 
 export const rateLimitOptions = {
   windowMs: 15 * 60 * 1000,
-  max: 300,
+  max: 5000,
   standardHeaders: true,
   legacyHeaders: false,
   message: 'Too many requests from this IP, please try again later.',
   statusCode: 429,
   skipFailedRequests: false,
   skipSuccessfulRequests: false,
-  limit: 300,
+  limit: 5000,
   requestPropertyName: 'rateLimit',
 };

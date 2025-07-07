@@ -11,8 +11,8 @@ import { dirname } from 'path';
 
 const router = express.Router();
 
-const strictLimit = rateLimiter(5, 15 * 60 * 1000); // 5 requests per 15 minutes
-const standardLimit = rateLimiter(15, 15 * 60 * 1000); // 15 requests per 15 minutes
+const strictLimit = rateLimiter(15, 15 * 60 * 1000); // 15 requests per 15 minutes
+const standardLimit = rateLimiter(45, 15 * 60 * 1000); // 45 requests per 15 minutes
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 

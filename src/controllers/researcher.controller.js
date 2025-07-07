@@ -160,6 +160,7 @@ class ResearcherProfileController {
   getArticlesAnalytics = async (req, res) => {
     try {
       const userId = req.params.id || req.user.id;
+      const { timeFrame = 'year' } = req.query;
 
       // Check if viewing another researcher's data while not being admin
       if (
@@ -173,10 +174,30 @@ class ResearcherProfileController {
         throw new UnauthorizedError('Not authorized to view this data');
       }
 
+      // Calculate date range based on timeFrame
+      let startDate;
+      const now = new Date();
+
+      switch (timeFrame) {
+        case 'week':
+          startDate = new Date();
+          startDate.setDate(now.getDate() - 7);
+          break;
+        case 'month':
+          startDate = new Date();
+          startDate.setMonth(now.getMonth() - 1);
+          break;
+        case 'year':
+        default:
+          startDate = new Date();
+          startDate.setFullYear(now.getFullYear() - 1);
+          break;
+      }
+
       // Get all articles by the researcher
       const articles = await Article.find({
         $or: [{ owner: userId }, { contributors: userId }],
-      }).select('title views publish_date');
+      }).select('title views publish_date category');
 
       // Calculate total views
       const totalViews = articles.reduce(
@@ -184,33 +205,88 @@ class ResearcherProfileController {
         0
       );
 
-      // Calculate views by month (last 6 months)
-      const sixMonthsAgo = new Date();
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      // Get articles within the specified time frame for the chart
+      const timeFrameArticles = articles.filter(
+        (article) => new Date(article.publish_date) >= startDate
+      );
 
-      const articlesByMonth = await Article.aggregate([
-        {
-          $match: {
-            $or: [
-              { owner: new mongoose.Types.ObjectId(userId) },
-              { contributors: new mongoose.Types.ObjectId(userId) },
-            ],
-            publish_date: { $gte: sixMonthsAgo },
-          },
-        },
-        {
-          $group: {
-            _id: {
-              month: { $month: '$publish_date' },
-              year: { $year: '$publish_date' },
+      // Calculate articles by time period based on timeFrame
+      let articlesByMonth = [];
+
+      if (timeFrame === 'week') {
+        // Group by day for last 7 days
+        articlesByMonth = await Article.aggregate([
+          {
+            $match: {
+              $or: [
+                { owner: new mongoose.Types.ObjectId(userId) },
+                { contributors: new mongoose.Types.ObjectId(userId) },
+              ],
+              publish_date: { $gte: startDate },
             },
-            count: { $sum: 1 },
           },
-        },
-        { $sort: { '_id.year': 1, '_id.month': 1 } },
-      ]);
+          {
+            $group: {
+              _id: {
+                day: { $dayOfMonth: '$publish_date' },
+                month: { $month: '$publish_date' },
+                year: { $year: '$publish_date' },
+              },
+              count: { $sum: 1 },
+            },
+          },
+          { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1 } },
+        ]);
+      } else if (timeFrame === 'month') {
+        // Group by day for last 30 days
+        articlesByMonth = await Article.aggregate([
+          {
+            $match: {
+              $or: [
+                { owner: new mongoose.Types.ObjectId(userId) },
+                { contributors: new mongoose.Types.ObjectId(userId) },
+              ],
+              publish_date: { $gte: startDate },
+            },
+          },
+          {
+            $group: {
+              _id: {
+                day: { $dayOfMonth: '$publish_date' },
+                month: { $month: '$publish_date' },
+                year: { $year: '$publish_date' },
+              },
+              count: { $sum: 1 },
+            },
+          },
+          { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1 } },
+        ]);
+      } else {
+        // Group by month for last 12 months
+        articlesByMonth = await Article.aggregate([
+          {
+            $match: {
+              $or: [
+                { owner: new mongoose.Types.ObjectId(userId) },
+                { contributors: new mongoose.Types.ObjectId(userId) },
+              ],
+              publish_date: { $gte: startDate },
+            },
+          },
+          {
+            $group: {
+              _id: {
+                month: { $month: '$publish_date' },
+                year: { $year: '$publish_date' },
+              },
+              count: { $sum: 1 },
+            },
+          },
+          { $sort: { '_id.year': 1, '_id.month': 1 } },
+        ]);
+      }
 
-      // Calculate article categories distribution
+      // Calculate article categories distribution (all time)
       const categoriesDistribution = await Article.aggregate([
         {
           $match: {
@@ -228,7 +304,9 @@ class ResearcherProfileController {
         },
       ]);
 
-      logger.info(`Retrieved analytics for researcher ${userId}`);
+      logger.info(
+        `Retrieved analytics for researcher ${userId} with timeFrame: ${timeFrame}`
+      );
 
       res.status(200).json({
         success: true,
@@ -239,6 +317,7 @@ class ResearcherProfileController {
             articles.sort((a, b) => b.views.count - a.views.count)[0] || null,
           articlesByMonth: articlesByMonth,
           categoriesDistribution: categoriesDistribution,
+          timeFrame: timeFrame,
         },
       });
     } catch (err) {

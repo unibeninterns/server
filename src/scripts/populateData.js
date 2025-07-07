@@ -3,21 +3,19 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import logger from './logger.js';
+import logger from '../utils/logger.js';
 import Faculty from '../Articles/models/faculty.model.js';
 import Department from '../Articles/models/department.model.js';
 import connectDB from '../db/database.js';
-import dotenv from 'dotenv';
+import validateEnv from '../utils/validateEnv.js';
 import mongoose from 'mongoose';
 
-// Load environment variables
-dotenv.config();
+validateEnv();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 async function populateFacultiesAndDepartments() {
   try {
-    // Connect to the database first
     await connectDB();
     logger.info('Connected to database');
 
@@ -72,7 +70,6 @@ async function populateFacultiesAndDepartments() {
         trimmedLine.match(/\([A-Z]+\)$/) && // ends with code in parentheses
         currentFaculty // ensure we have a current faculty
       ) {
-        const parts = trimmedLine.split(' ');
         const deptCode = trimmedLine.substring(
           trimmedLine.lastIndexOf('(') + 1,
           trimmedLine.lastIndexOf(')')
@@ -80,7 +77,7 @@ async function populateFacultiesAndDepartments() {
 
         // Get the title between the department code and the parentheses code
         const title = trimmedLine.substring(
-          parts[0].length + 1,
+          trimmedLine.indexOf(' ') + 1,
           trimmedLine.lastIndexOf('(') - 1
         );
 
@@ -132,7 +129,12 @@ async function populateFacultiesAndDepartments() {
       departmentsCount: departments.length,
     };
   } catch (error) {
-    logger.error(`Error populating database: ${error.message}`);
+    // Improved error handling
+    if (error instanceof Error) {
+      logger.error(`Error populating database: ${error.message}`);
+    } else {
+      logger.error('Error populating database: Unknown error');
+    }
     throw error;
   } finally {
     // Disconnect from the database
@@ -151,9 +153,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       process.exit(0);
     })
     .catch((error) => {
-      logger.error('Population script failed:', error);
+      // Improved error logging
+      if (error instanceof Error) {
+        logger.error('Population script failed:', error.message);
+      } else {
+        logger.error('Population script failed with unknown error');
+      }
       process.exit(1);
     });
 }
 
-export default populateFacultiesAndDepartments;
+populateFacultiesAndDepartments();

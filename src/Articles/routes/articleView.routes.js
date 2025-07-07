@@ -1,9 +1,6 @@
 import express from 'express';
 import articleViewController from '../controllers/articleView.controller.js';
-import {
-  authenticateToken,
-  authenticateAdminToken,
-} from '../../middleware/auth.middleware.js';
+import { authenticateToken } from '../../middleware/auth.middleware.js';
 
 const router = express.Router();
 
