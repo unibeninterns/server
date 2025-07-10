@@ -12,6 +12,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const uploadsDir = path.join(__dirname, 'uploads');
 const profileUploadDir = path.join(uploadsDir, 'profiles');
 const coverPicUploadDir = path.join(uploadsDir, 'cover_pic');
+const infoDocUploadDir = path.join(uploadsDir, 'info_docs');
 
 // Create directories if they don't exist
 if (!fs.existsSync(uploadsDir)) {
@@ -19,7 +20,7 @@ if (!fs.existsSync(uploadsDir)) {
   logger.info(`Uploads directory created: ${uploadsDir}`);
 }
 
-[profileUploadDir, coverPicUploadDir].forEach((dir) => {
+[profileUploadDir, coverPicUploadDir, infoDocUploadDir].forEach((dir) => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
     logger.info(`Directory created: ${dir}`);

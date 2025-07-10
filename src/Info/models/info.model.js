@@ -10,7 +10,7 @@ const InfoSchema = new mongoose.Schema(
     },
     description: {
       type: String,
-      maxlength: 1000,
+      maxlength: 10000,
       trim: true,
     },
     info_doc: {
