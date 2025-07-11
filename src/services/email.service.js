@@ -128,8 +128,6 @@ const credentialsTemplate = (email, password, loginUrl) => `
         
         <a href="${loginUrl}" class="button">Log In to Portal</a>
         
-        <p><strong>Important:</strong> Please change your password after your first login for security purposes.</p>
-        
         <p>If you did not expect to receive this email, please contact our support team immediately.</p>
     </div>
     
