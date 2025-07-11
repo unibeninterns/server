@@ -189,7 +189,7 @@ class InfoController {
         }
       }
 
-      await Info.findByIdAndRemove(req.params.id);
+      await Info.findByIdAndDelete(req.params.id);
       logger.info(`Info document deleted successfully: ${document._id}`);
 
       res.json({ msg: 'Info document removed' });
