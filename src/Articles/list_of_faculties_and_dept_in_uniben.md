@@ -110,7 +110,6 @@ ITE Department of Industrial and Technical Education (ITE)
 
 ENG Faculty of Engineering (ENG)
 AGE Department of Agricultural Engineering (AGE)
-AGR Department of Agricultural Engineering (AGR)
 CHE Department of Chemical Engineering (CHE)
 CPE Department of Computer Engineering (CPE)
 CVE Department of Civil Engineering (CVE)
